@@ -219,49 +219,53 @@ client.on('message', message => {
 
 			}, message, returnDiscussionRequest);
 		}
-	}
-	
-	if (message.content.startsWith("$mine")) {
-		if (mines[message.author.id].mining) {
-			message.reply("sorry! You can't be in two mines at once!");
-		}
 		
-		var a = bi.rand(64);
-		var b = bi.rand(64);
-		var c = bi.lpm([1, 0], a, b);
-		
-		mines[message.author.id].mining = true;
-		mines[message.author.id].b = b;
-		mines[message.author.id].c = c;
-		mines[message.author.id].wrong = 0;
-		
-		fs.writeFile("./mines.json", JSON.stringify(mines));
-		
-		message.reply("check your PMs!");
-		message.author.sendMessage("```2^a mod b = c\n\nIn binary:\n\nb = " + b.join("") + "\nc = " + c.join("") + "```\nCalculate `a` to get 5 IK.\n\nGood luck!");
-	}
-	
-	if (message.content.startsWith("$mined ")) {
-		if (!mines[message.author.id].mining) {
-			message.reply("sorry! You aren't in a mine!");
-		}
-		
-		var a = message.content.substring(7).split("");
-		var b = mines[message.author.id].b;
-		var c1 = mines[message.author.id].c;
-		var c2 = bi.lpm([1, 0], a, b);
-		
-		if (bi.eq(c1, c2)) {
-			message.reply("you're a winner! +5 " + lcoin);
+		if (message.content.startsWith("$mine")) {
+			if (mines[message.author.id] && mines[message.author.id].mining) {
+				message.reply("sorry! You can't be in two mines at once!");
+				
+				return;
+			}
 			
-			mines[message.author.id].mining = false;
-		} else {
-			message.reply("sorry! That answer is wrong. Please try again!");
+			var a = bi.rand(64);
+			var b = bi.rand(64);
+			var c = bi.lpm([1, 0], a, b);
 			
-			mines[message.author.id].wrong ++;
+			mines[message.author.id].mining = true;
+			mines[message.author.id].b = b;
+			mines[message.author.id].c = c;
+			mines[message.author.id].wrong = 0;
+			
+			fs.writeFile("./mines.json", JSON.stringify(mines));
+			
+			message.reply("check your PMs!");
+			message.author.sendMessage("```2^a mod b = c\n\nIn binary:\n\nb = " + b.join("") + "\nc = " + c.join("") + "```\nCalculate `a` to get 5 IK.\n\nGood luck!");
 		}
 		
-		fs.writeFile("./mines.json", JSON.stringify(mines));
+		if (message.content.startsWith("$mined ")) {
+			if (mines[message.author.id] && !mines[message.author.id].mining) {
+				message.reply("sorry! You aren't in a mine!");
+				
+				return;
+			}
+			
+			var a = message.content.substring(7).split("");
+			var b = mines[message.author.id].b;
+			var c1 = mines[message.author.id].c;
+			var c2 = bi.lpm([1, 0], a, b);
+			
+			if (bi.eq(c1, c2)) {
+				message.reply("you're a winner! +5 " + lcoin);
+				
+				mines[message.author.id].mining = false;
+			} else {
+				message.reply("sorry! That answer is wrong. Please try again!");
+				
+				mines[message.author.id].wrong ++;
+			}
+			
+			fs.writeFile("./mines.json", JSON.stringify(mines));
+		}
 	}
 });
 /**/
