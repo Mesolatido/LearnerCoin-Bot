@@ -222,14 +222,17 @@ client.on('message', message => {
 	}
 	
 	if (message.content.startsWith("$mine")) {
-		if (mines[message.author.id].mining) {
+		if (mines[message.author.id] && mines[message.author.id].mining) {
 			message.reply("sorry! You can't be in two mines at once!");
+			return;
 		}
 		
 		var a = bi.rand(64);
 		var b = bi.rand(64);
 		var c = bi.lpm([1, 0], a, b);
-		
+		if(!mines[message.author.id]){
+			mines[message.author.id]={};
+		}
 		mines[message.author.id].mining = true;
 		mines[message.author.id].b = b;
 		mines[message.author.id].c = c;
@@ -242,7 +245,7 @@ client.on('message', message => {
 	}
 	
 	if (message.content.startsWith("$mined ")) {
-		if (!mines[message.author.id].mining) {
+		if (mines[message.author.id] && mines[message.author.id].mining) {
 			message.reply("sorry! You aren't in a mine!");
 		}
 		
@@ -264,6 +267,7 @@ client.on('message', message => {
 		fs.writeFile("./mines.json", JSON.stringify(mines));
 	}
 });
+
 /**/
 function success(token) {
 	// handle success
