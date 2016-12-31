@@ -2,6 +2,8 @@ const Discord = require('discord.js');
 const request = require('request');
 const client = new Discord.Client();
 
+const bi = require("./bitint.js");
+
 var kaid = '';
 var selfBot=false;//Not used because tokens removed from safeapp version
 var msgembedded;
@@ -217,6 +219,13 @@ client.on('message', message => {
 		}		
 	}
 	
+	if (message.content.startsWith("$mine")) {
+                var a = bi.rand(64);
+                var b = bi.rand(64);
+                var c = bi.lpm([1, 0], a, b);
+
+                message.author.sendMessage("```2^a mod b = c\n\nIn binary:\n\nb = " + b.join("") + "\nc = " + c.join("") + "```\nCalculate `a` to get 5 IK.\n\nGood luck!");
+        }
 });
 /**/
 function success(token) {
