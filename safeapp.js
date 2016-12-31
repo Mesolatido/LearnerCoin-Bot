@@ -4,6 +4,10 @@ const client = new Discord.Client();
 
 const bi = require("./bitint.js");
 
+const fs = require("fs");
+
+var mines = require("./mines.json");
+
 var kaid = '';
 var selfBot = false; //Not used because tokens removed from safeapp version
 var msgembedded;
@@ -214,18 +218,51 @@ client.on('message', message => {
 				var newembed = message.channel.sendMessage("", msgembedded);
 
 			}, message, returnDiscussionRequest);
-
 		}
 	}
 	
 	if (message.content.startsWith("$mine")) {
-                var a = bi.rand(64);
-                var b = bi.rand(64);
-                var c = bi.lpm([1, 0], a, b);
-
-                message.author.sendMessage("```2^a mod b = c\n\nIn binary:\n\nb = " + b.join("") + "\nc = " + c.join("") + "```\nCalculate `a` to get 5 IK.\n\nGood luck!");
-        }
-
+		if (mines[message.author.id].mining) {
+			message.reply("sorry! You can't be in two mines at once!");
+		}
+		
+		var a = bi.rand(64);
+		var b = bi.rand(64);
+		var c = bi.lpm([1, 0], a, b);
+		
+		mines[message.author.id].mining = true;
+		mines[message.author.id].b = b;
+		mines[message.author.id].c = c;
+		mines[message.author.id].wrong = 0;
+		
+		fs.writeFile("./mines.json", JSON.stringify(mines));
+		
+		message.reply("check your PMs!");
+		message.author.sendMessage("```2^a mod b = c\n\nIn binary:\n\nb = " + b.join("") + "\nc = " + c.join("") + "```\nCalculate `a` to get 5 IK.\n\nGood luck!");
+	}
+	
+	if (message.content.startsWith("$mined ")) {
+		if (!mines[message.author.id].mining) {
+			message.reply("sorry! You aren't in a mine!");
+		}
+		
+		var a = message.content.substring(7).split("");
+		var b = mines[message.author.id].b;
+		var c1 = mines[message.author.id].c;
+		var c2 = bi.lpm([1, 0], a, b);
+		
+		if (bi.eq(c1, c2)) {
+			message.reply("you're a winner! +5 " + lcoin);
+			
+			mines[message.author.id].mining = false;
+		} else {
+			message.reply("sorry! That answer is wrong. Please try again!");
+			
+			mines[message.author.id].wrong ++;
+		}
+		
+		fs.writeFile("./mines.json", JSON.stringify(mines));
+	}
 });
 /**/
 function success(token) {
